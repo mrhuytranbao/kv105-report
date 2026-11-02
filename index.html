@@ -74,6 +74,15 @@ footer{text-align:center;color:var(--mut);font-size:12px;padding:20px}
 </style>
 </head>
 <body>
+<div id="gate" style="position:fixed;inset:0;background:#0b7a3e;z-index:100;display:flex;align-items:center;justify-content:center">
+ <form id="gf" style="background:#fff;border-radius:12px;padding:28px 30px;width:340px;box-shadow:0 8px 30px rgba(0,0,0,.25);text-align:center">
+  <div style="font-size:18px;font-weight:700;color:#0b7a3e;margin-bottom:4px">KV 10.5 · Báo cáo KPI</div>
+  <div style="font-size:12.5px;color:#6b7570;margin-bottom:16px">Nhập mật khẩu khu vực để xem báo cáo</div>
+  <input id="gp" type="password" placeholder="Mật khẩu" autocomplete="current-password" style="width:100%;padding:10px 12px;border:1px solid #cfd6d2;border-radius:8px;font-size:14px">
+  <label style="display:flex;gap:6px;align-items:center;font-size:12px;color:#6b7570;margin:10px 0 14px"><input type="checkbox" id="gr" checked>Ghi nhớ trên máy này</label>
+  <button style="width:100%;padding:10px;border:0;border-radius:8px;background:#0b7a3e;color:#fff;font-weight:700;font-size:14px;cursor:pointer">Xem báo cáo</button>
+  <div id="ge" style="color:#c0392b;font-size:12.5px;margin-top:10px;min-height:16px"></div>
+ </form></div>
 <header>
  <div class="hrow">
   <div><h1>KV 10.5 Vĩnh Long – Bến Tre · Báo cáo phân tích KPI</h1><div class="sub" id="subt"></div></div>
@@ -493,7 +502,15 @@ function render(){
  document.getElementById('subt').textContent=scopeName(S.pgd)+' · Dữ liệu '+ml(MON[0])+'–'+ml(MON[MON.length-1])+' · Kỳ hiển thị '+S.ky+' tháng';
  heat();ktab();s3();s4();s5();s6();s7()}
 document.getElementById('upd').textContent=UPD;
-render();
+const PH='2a18ef9bd77102ff068428cfd492279dc78baf04c4307c8b7c200ea8666c8d91';
+async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+function unlock(){document.getElementById('gate').remove();render()}
+(function(){let ok=false;try{ok=localStorage.getItem('kv105_ok')===PH}catch(e){}
+ if(ok){unlock();return}
+ document.getElementById('gp').focus();
+ document.getElementById('gf').onsubmit=async e=>{e.preventDefault();const h=await sha(document.getElementById('gp').value.trim());
+  if(h===PH){try{if(document.getElementById('gr').checked)localStorage.setItem('kv105_ok',PH)}catch(e){}unlock()}
+  else{document.getElementById('ge').textContent='Sai mật khẩu, vui lòng thử lại.';document.getElementById('gp').select()}}})();
 </script>
 </body>
 </html>
