@@ -405,7 +405,7 @@ function s5(){
    options:{scales:{y:{beginAtZero:true,ticks:{callback:v=>pct(v,0)}}}}});
  const t1=series('ts_khm'),t2=series('ts_vl'),k1=M.map(t=>(D.kvts[t]||[])[0]),tt1=trend(t1),tt2=trend(t2);
  draw('c13','C13 · Ticket size 2W – KHM và KH vay lại','Triệu đồng / hợp đồng',cm(`${ml(S.mon)}: KHM ${fmt(last(t1),1)} tr, vay lại ${fmt(last(t2),1)} tr${S.pgd!=='KV'?'; TB KV KHM '+fmt(last(k1),1)+' tr':''}.`,
-   tt1.dir<0||tt2.dir<0?warn(`Ticket ${tt1.dir<0?'KHM':'vay lại'} giảm → đẩy SP trọng điểm PN, X6, KHQL UD (tận dụng tips & rule).`):(last(t1)!=null&&last(k1)!=null&&last(t1)<last(k1))?'Ticket KHM dưới TB KV → đẩy SP trọng điểm PN, X6, KHQL UD.':'Duy trì SP trọng điểm PN, X6, KHQL UD; không nâng ticket bằng cách nới LTV.',
+   'Ticket size là trung bình HĐ, phụ thuộc chính sách SP, ít biến động – dùng để theo dõi, không đặt mục tiêu riêng.',
    `${tw('KHM',tt1)} · ${tw('Vay lại',tt2)}`),
   {data:{labels:X,datasets:[L('KHM 2W',t1,C.khm,{datalabels:Object.assign(dl(1),dlTop,{color:C.khm})}),L('Vay lại 2W',t2,C.vl,{datalabels:Object.assign(dl(1),dlBot,{color:C.vl})})]},options:{scales:{y:{suggestedMin:8}}}})}
 
@@ -460,6 +460,17 @@ const KEYA=[
  ['Năng suất','Chia chỉ tiêu từng nguồn GN / SL đơn chăm sóc đến cấp CVKD; Daily tracking 2 khung giờ/ngày.','% CVKD đạt chỉ tiêu nguồn']];
 function win(c,i,n,fn){const out=[];for(let k=n-1;k>=0;k--){if(i-k<0)continue;const a=agg(MON[i-k],c);out.push(a?fn(a):null)}return out}
 const avg=a=>{const v=a.filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};
+/* PGD mẫu cho PGD mới: TTVL (mở 04/2026, phát triển mạnh nhất năm) */
+const BENCH='VLG26010';
+function newBench(c,t){const age=ageM(c,t);const br=D.recs.find(r=>r.p===BENCH&&ageM(BENCH,r.t)===age);
+ const first=D.recs.filter(r=>r.p===BENCH&&ageM(BENCH,r.t)<=5);
+ const bs=Object.fromEntries(CHS.map(([n,k])=>[n,first.reduce((s,r)=>s+(r[k]||0),0)]));const bt=Object.values(bs).reduce((a,b)=>a+b,0);
+ const mine=D.recs.filter(r=>r.p===c&&r.t<=t);const ms=Object.fromEntries(CHS.map(([n,k])=>[n,mine.reduce((s,r)=>s+(r[k]||0),0)]));const mt=Object.values(ms).reduce((a,b)=>a+b,0);
+ const low=mt?CHS.map(([n])=>({n,s:ms[n]/mt,b:bs[n]/bt})).filter(x=>x.s<x.b-.05).sort((p,q)=>(p.s-p.b)-(q.s-q.b)):[];
+ const mix=CHS.map(([n])=>({n,v:bs[n]/bt})).sort((p,q)=>q.v-p.v).map(x=>`${x.n} ${pct(x.v,0)}`).join(', ');
+ const my=mt?CHS.map(([n])=>({n,v:ms[n]/mt})).sort((p,q)=>q.v-p.v).map(x=>`${x.n} ${pct(x.v,0)}`).join(', '):'';
+ return{age,r:age!==ageM(BENCH,BENCH_T(age))?null:br,low,mix,my}}
+const BENCH_T=a=>{const o=META[BENCH].open;let y=+o.slice(0,4),m=+o.slice(5)+a;y+=Math.floor((m-1)/12);m=(m-1)%12+1;return y+'-'+String(m).padStart(2,'0')};
 function s7(){
  document.getElementById('actA').innerHTML='<tr><th style="width:90px">Nhóm</th><th>Key trọng điểm</th><th style="width:300px">Đo bằng</th></tr>'+KEYA.map(r=>`<tr><td><span class="tag t5">${r[0]}</span></td><td>${r[1]}</td><td class="sig">${r[2]}</td></tr>`).join('');
  const t=S.mon,i=MON.indexOf(t);
@@ -488,8 +499,10 @@ function s7(){
   if(!g.isNew&&g.f)sig.push(`%RFW DB ${pct(b.rfw)} (TB ${pct(TH.SF.m)})${hiTy.length?' · cao nhất RFW '+hiTy[0][0]+' '+pct(hiTy[0][1]):''}`);
   if(cs.length)sig.push('CSVH giảm: '+cs.join(', '));
   /* Key ưu tiên theo nhóm */
-  const nk=(D.recs.find(r=>r.t==='2026-11'&&r.p===c)||{}).mt_khm;const src=`GN KHM ${fmt(b.khm)} tr – GN Vay lại ${fmt(b.vl)} tr – GN Topup ${fmt(b.tu)} tr${nk!=null?` (KPI KHM T11: ${fmt(nk)} KH)`:''}`;
-  if(g.isNew)act.push(`Tăng GNN là chính: mở rộng Trade địa bàn + Digital/Livestream, xây tệp KHM; MT GNN theo nguồn ${src}.`);
+  const src=`GN KHM ${fmt(b.khm)} tr – GN Vay lại ${fmt(b.vl)} tr – GN Topup ${fmt(b.tu)} tr`;
+  if(g.isNew){const B=newBench(c,t);
+   act.push(`Tăng GNN là chính${B.r?` theo đà PGD mẫu TTVL: tháng thứ ${B.age} TTVL đạt GNN ${fmt(B.r.gnn)} tr / ${fmt(B.r.khm)} KHM; PGD hiện ${fmt(a.gnn)} tr / ${fmt(a.khm)} KHM (bằng ${pct(div(a.gnn,B.r.gnn),0)} đà TTVL)`:''}. MT GNN theo nguồn ${src}.`);
+   act.push(`Thúc đẩy KHM mở rộng các kênh${B.low.length?': ưu tiên '+B.low.map(x=>`${x.n} (PGD ${pct(x.s,0)} vs TTVL ${pct(x.b,0)})`).join(', '):', tăng đều cả 5 kênh'}. Cơ cấu PGD: ${B.my||'–'} · mẫu TTVL 6 tháng đầu: ${B.mix}.`)}
   else if(g.g===2&&!g.soft)act.push(`Tăng mạnh toàn bộ hoạt động tạo GNN (thiếu ${fmt(g.gap)} tr/tháng, +${pct(g.gp,0)} so năng lực): rà soát lại đơn HO, hoạt động MKT, KHQL; chia MT GNN theo nguồn ${src}.`);
   else if(g.g>=1)act.push(`Tăng thêm GNN (+${fmt(g.gap)} tr/tháng, +${pct(g.gp,0)} so năng lực): chia MT GNN theo nguồn ${src}.`);
   const rutAct=b.s4>=.3?'dự phóng danh mục 4W đầu tháng, ưu tiên 4W Gốc lãi ≥ 36T và gói 5,4%':'giữ chân 2W: Re-call KH tất toán, chuyển gói 5,4%, kéo dài tenor';
