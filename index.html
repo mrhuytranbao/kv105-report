@@ -642,7 +642,8 @@ function s7(){
   else if(g.g)sig.push(`Chênh GNN ${pct(g.gp,0)} (TB ${pct(TH.SG.m,0)}): thiếu ${fmt(g.gap)} tr/tháng`);
   if(!g.isNew&&g.r)sig.push(`%Rút DB ${pct(b.rut)} (TB ${pct(TH.SR.m)})${b.s4>=.3?', DN 4W '+pct(b.s4,0):''}`);
   if(!g.isNew&&g.f)sig.push(`%RFW DB ${pct(b.rfw)} (TB ${pct(TH.SF.m)})${hiTy.length?' · cao nhất RFW '+hiTy[0][0]+' '+pct(hiTy[0][1]):''}`);
-  const CD=csDiag(c,i);if(CD.bad){const j=cs.indexOf('đơn HO (F2S giảm)');if(j>=0)cs.splice(j,1)}
+  const CD=csDiag(c,i);{const kh=trend(win(c,i,6,x=>x.ch_ho)),fl=CD.f!=null&&CD.fK&&CD.f<CD.fK*.9;CD.bad=!!(CD.ok&&CD.key&&kh.dir<0&&fl);if(CD.bad)CD.wk=['KHM HO giảm',`F2S HO ${pct(CD.f)} < 90% TB KV ${pct(CD.fK)}`]}
+  if(CD.bad){const j=cs.indexOf('đơn HO (F2S giảm)');if(j>=0)cs.splice(j,1)}
   if(cs.length)sig.push('CSVH giảm: '+cs.join(', '));
  if(CD.bad)sig.push(`Phễu CSVH HO (${CD.wk.join(', ')}): ${CD.dx}`);
   /* Key ưu tiên theo nhóm */
