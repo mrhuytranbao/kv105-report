@@ -350,10 +350,17 @@ function s4(){
   {data:{labels:X,datasets:ds6},options:{scales:{y:{beginAtZero:true,ticks:{callback:v=>pct(v,1)}}}}})}
 
 /* ---------- section 5 ---------- */
-function chWarn(){const i=MON.indexOf(S.mon),out=[];
- members(S.pgd).forEach(c=>{[['Digital HO','ch_ho'],['Trade','ch_trade'],['Digital ML','ch_dig'],['CTV','ch_ctv'],['PTDT','ch_ptdt']].forEach(([n,k])=>{const v=win(c,i,6,a=>a[k]);if(v.filter(x=>x!=null).length<3)return;const tr=trend(v);if(tr.dir<0)out.push({c,n,rel:tr.rel})})});
- if(!out.length)return '';out.sort((a,b)=>a.rel-b.rel);
- return '<div style="margin-top:4px">'+warn('Kênh đang giảm (6T): ')+out.slice(0,6).map(x=>`${META[x.c].short} ${x.n} ▼${pct(-x.rel,0)}/th`).join(' · ')+'</div>'}
+const CHS=[['Digital HO','ch_ho'],['Trade','ch_trade'],['Digital ML','ch_dig'],['CTV','ch_ctv'],['PTDT','ch_ptdt']];
+/* giảm đột ngột: tháng gần nhất có số so tháng trước > 15% (tháng trước ≥ 5 KH để tránh nhiễu) */
+function momDrop(v){const x=v.filter(z=>z!=null);if(x.length<2)return null;const l=x[x.length-1],p=x[x.length-2];return p>=5&&l<p*.85?{l,p,d:l/p-1}:null}
+function chWarn(){const i=MON.indexOf(S.mon),out=[],mom=[];
+ members(S.pgd).forEach(c=>{CHS.forEach(([n,k])=>{const v=win(c,i,6,a=>a[k]);if(v.filter(x=>x!=null).length<2)return;
+  const m=momDrop(v);if(m)mom.push({c,n,...m});
+  if(v.filter(x=>x!=null).length>=3){const tr=trend(v);if(tr.dir<0)out.push({c,n,rel:tr.rel})}})});
+ let h='';
+ if(mom.length){mom.sort((a,b)=>a.d-b.d);h+='<div style="margin-top:4px">'+warn('Giảm đột ngột so tháng trước (>15%): ')+mom.slice(0,8).map(x=>`${META[x.c].short} ${x.n} ${fmt(x.p)}→${fmt(x.l)} (▼${pct(-x.d,0)})`).join(' · ')+'</div>'}
+ if(out.length){out.sort((a,b)=>a.rel-b.rel);h+='<div style="margin-top:4px">'+warn('Xu hướng giảm (6T): ')+out.slice(0,6).map(x=>`${META[x.c].short} ${x.n} ▼${pct(-x.rel,0)}/th`).join(' · ')+'</div>'}
+ return h}
 function s5(){
  const X=months().map(ml),M=months(),st={x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true}};
  const k2=series('khm2'),k4=series('khm4'),mk=series('mt_khm'),kt=series('khm'),tk=trend(kt);
@@ -366,8 +373,9 @@ function s5(){
  chs.forEach(x=>{x.s=x.d.reduce((a,b)=>a+(b||0),0);x.tr=trend(x.d)});chs.sort((a,b)=>b.s-a.s);
  const mkt=series(a=>a.ch_trade==null&&a.ch_dig==null?null:(a.ch_trade||0)+(a.ch_dig||0)),tm=trend(mkt);
  const dn=chs.filter(x=>x.tr.dir<0).map(x=>x.n);
+ const kmom=chs.map(x=>({n:x.n,m:momDrop(x.d)})).filter(x=>x.m);
  draw('c8','C8 · KHM theo kênh','Số KH · xếp kênh lớn nhất ở đáy cột',cm(`Kênh lớn nhất kỳ: ${chs[0].n}; nhỏ nhất: ${chs[chs.length-1].n}.`+(chs[0].d[chs[0].d.length-1]==null?` ${ml(S.mon)} chưa có số theo kênh.`:''),
-   (tm.dir<0?warn('KHM nguồn MKT (Trade + Digital) giảm → rà soát toàn bộ hoạt động MKT.')+' ':'')+'Digital/Livestream là trend thị trường, chưa có giới hạn → khai thác thêm (tần suất Livestream, nội dung theo nhóm). Trade duy trì hiệu suất theo Heatmap/Mymap.'+chWarn(),
+   (kmom.length?warn(kmom.map(x=>`${x.n} giảm ${pct(-x.m.d,0)} so tháng trước (${fmt(x.m.p)}→${fmt(x.m.l)})`).join('; ')+' → rà soát ngay hoạt động kênh này.')+' ':'')+(tm.dir<0?warn('KHM nguồn MKT (Trade + Digital) giảm → rà soát toàn bộ hoạt động MKT.')+' ':'')+'Digital/Livestream là trend thị trường, chưa có giới hạn → khai thác thêm (tần suất Livestream, nội dung theo nhóm). Trade duy trì hiệu suất theo Heatmap/Mymap.'+chWarn(),
    chs.map(x=>`<b>${x.n}</b> ${x.tr.dir>0?'▲':x.tr.dir<0?'▼':'▬'}`).join(' · ')+` · <b>MKT</b> ${tm.t}`),
   {data:{labels:X,datasets:[...chs.map(x=>Bd(x.n,x.d,x.c,{stack:'s',datalabels:Object.assign(dl(0),dlMid,{color:x.n==='CTV'||x.n==='Trade'?'#333':'#fff'})})),
    L('MT KHM tổng',mk,C.red,{borderDash:[6,4],datalabels:Object.assign(dl(0),dlTop,{color:C.red})})]},options:{scales:st}});
@@ -466,6 +474,7 @@ function s7(){
   const cs=[];
   const fh=win(c,i,6,x=>x.form_ho),rh=win(c,i,6,x=>div(x.f2s_ho,x.form_ho)),trh=trend(rh,6,1);if(trh.dir<0&&surge(fh)<.4)cs.push('đơn HO (F2S giảm)');
   const mk=win(c,i,6,x=>x.ch_trade==null&&x.ch_dig==null?null:(x.ch_trade||0)+(x.ch_dig||0)),tmk=trend(mk);if(tmk.dir<0)cs.push('hoạt động MKT (KHM nguồn MKT giảm)');
+  [['Digital/Livestream','ch_dig'],['Trade','ch_trade'],['Digital HO','ch_ho']].forEach(([n,k])=>{const m=momDrop(win(c,i,2,x=>x[k]));if(m)cs.push(`${n} (giảm ${pct(-m.d,0)} so tháng trước: ${fmt(m.p)}→${fmt(m.l)})`)});
   const ld=win(c,i,6,x=>x.lead),tld=trend(ld);if(tld.dir<0)cs.push('tệp Inactive, Topup (Lead giảm)');
   const l2=avg(win(c,i,3,x=>x.l2s));if(l2!=null&&K.l2s&&l2<K.l2s*.85)cs.push('chuyển đổi lead (L2S thấp)');
   const fp=win(c,i,6,x=>x.form_ptdt),rp=win(c,i,6,x=>div(x.f2s_ptdt,x.form_ptdt));const ptdtSurge=trend(rp,6,1).dir<0&&surge(fp)>=.4;
