@@ -183,9 +183,7 @@ footer{text-align:center;color:var(--mut);font-size:12px;padding:20px}
 
 <section id="s6"><h2><span class="n">6</span>MT GNN bottom-up tháng 11/2026</h2>
 <p class="desc">MT GNN BU = MT Net (HO) + DN đầu kỳ × (%Rút dự báo + %RFW dự báo). %Rút: TB 3T 50/30/20; PGD ≥ 25% DN 4W dùng TB 6T trong biên ± sai số chuẩn, trần 13%; PGD ≤ 3 tháng lấy TB KV. %RFW: PGD ≤ 3 tháng lấy MT HO; dưới 12 tháng tối thiểu 2%. So MT BU với GNN dự báo theo năng lực để phân nhóm PGD. <i>Mục 6–7 luôn tính trên tổng 2W + 4W.</i></p>
-<div class="card"><div class="scroll"><table class="bu" id="bu"></table></div><div class="note" id="buN"></div></div>
-<p class="desc" style="margin-top:16px"><b>Chẩn đoán CSVH đơn HO</b> – PGD yếu KHM và/hoặc F2S HO → soi phễu Kết nối 2, 3 → % Liên hệ được → % Hẹn ra PGD (TB 3 tháng gần nhất có số, so ngưỡng).</p>
-<div class="card"><div class="scroll"><table class="bu" id="csd"></table></div><div class="note" id="csdN"></div></div></section>
+<div class="card"><div class="scroll"><table class="bu" id="bu"></table></div><div class="note" id="buN"></div></div></section>
 
 <section id="s7"><h2><span class="n">7</span>Action đề xuất – <span id="acT"></span></h2>
 <p class="desc"><b>A. Key trọng điểm Khu vực</b> (cố định, áp dụng 100% PGD)</p>
@@ -488,8 +486,14 @@ function s5(){
    L('Ticket KHM 2W',t1,C.khm,{datalabels:Object.assign(dl(1),dlTop,{color:C.khm})}),L('Ticket Vay lại 2W',t2,C.vl,{datalabels:Object.assign(dl(1),dlBot,{color:C.vl})})]},options:{scales:{y:{suggestedMin:8}}}});
  /* C15 LTV */
  const v1=series('ltv_khm'),v2=series('ltv_vl'),tv1=trend(v1,6,1),tv2=trend(v2,6,1),kv1=M.map(t=>(agg(t,'KV')||{}).ltv_khm);
- draw('c15','C15 · LTV trung bình 2W – KHM / KH vay lại','% khoản vay / giá thẩm (ngưỡng 62% chỉ áp dụng 4W – không vẽ)',cm(`${ml(S.mon)}: LTV KHM ${pct(last(v1))}, vay lại ${pct(last(v2))}${S.pgd!=='KV'?'; TB KV KHM '+pct(last(kv1)):''}.`,
-    (tv1.dir>0||tv2.dir>0)?warn(`LTV 2W đang tăng (${[tv1.dir>0?'KHM':'',tv2.dir>0?'Vay lại':''].filter(Boolean).join(', ')}) → rà giá thẩm và chân dung đầu vào, ưu tiên gói 5,4% cho HĐ LTV cao (liên quan RFW).`):'LTV 2W ổn định/giảm – duy trì kiểm soát giá thẩm và chân dung đầu vào.',
+ const rf=series('rfw'),mrf=series('mt_rfw'),rk=series('rfwk'),rfHi=last(rf)!=null&&last(mrf)!=null&&last(rf)>last(mrf);
+ const hiP=S.pgd==='KV'?ORD.filter(c=>{const a=agg(S.mon,c);return a&&a.rfw!=null&&a.mt_rfw!=null&&a.rfw>a.mt_rfw}).map(c=>META[c].short):[];
+ const sp='thúc đẩy SP trọng điểm (X6, PN, gói 5,4%, KHQL UD) để giữ LTV và ticket size';
+ let w15=(tv1.dir>0||tv2.dir>0)?`LTV 2W tăng (${[tv1.dir>0?'KHM':'',tv2.dir>0?'Vay lại':''].filter(Boolean).join(', ')}) → ${sp}.`:(tv1.dir<0||tv2.dir<0)?`LTV 2W giảm → ${sp}.`:`LTV 2W ổn định → tiếp tục ${sp}.`;
+ if(S.pgd!=='KV'&&rfHi)w15=warn(w15+` RFW cảnh báo ${pct(last(rf),2)} > MT ${pct(last(mrf),2)}${last(rk)!=null?' (RFW KHM '+pct(last(rk),2)+')':''} → chẩn đoán chân dung KHM đầu vào: nghề nghiệp, nơi ở, lịch sử trả nợ, mục đích vay.`);
+ else if(hiP.length)w15+=' '+warn(`PGD RFW vượt MT (${hiP.join(', ')}) → chẩn đoán chân dung KHM đầu vào.`);
+ draw('c15','C15 · LTV trung bình 2W – KHM / KH vay lại','% giá trị vay / giá trị tài sản (ngưỡng 62% chỉ áp dụng 4W – không vẽ)',cm(`${ml(S.mon)}: LTV KHM ${pct(last(v1))}, vay lại ${pct(last(v2))}${S.pgd!=='KV'?'; TB KV KHM '+pct(last(kv1)):''}.`,
+    w15,
    `${tw('KHM',tv1)} · ${tw('Vay lại',tv2)}`),
   {data:{labels:X,datasets:[L('LTV KHM',v1,C.khm,{datalabels:Object.assign(dl(1,1),dlBot,{color:C.khm})}),L('LTV Vay lại',v2,C.vl,{datalabels:Object.assign(dl(1,1),dlTop,{color:C.vl})})]},
    options:{scales:{y:{suggestedMin:.4,suggestedMax:.75,ticks:{callback:v=>pct(v,0)}}}}});
@@ -587,7 +591,7 @@ function csTab(){
 
 /* ---------- section 7 ---------- */
 const KEYA=[
- ['LTV','KHM và KHQL chỉ giải ngân tối đa 62% LTV – vượt phải xin ngoại lệ QLKV.','% HĐ mới > 62% LTV (mục tiêu 0% ngoài ngoại lệ)'],
+ ['LTV','4W chỉ giải ngân tối đa 62% LTV – vượt phải xin ngoại lệ QLKV.','% HĐ 4W > 62% LTV (mục tiêu 0% ngoài ngoại lệ)'],
  ['2W','100% ưu tiên gói 5,4% với HĐ > 62% LTV; còn lại 100% bán tính năng HKTT.','% HĐ 2W có gói 5,4% / HKTT'],
  ['2W','Chuyển đổi KH đang vay sang gói 5,4% tại quầy; nhóm KH có rủi ro roll lập danh sách trước, rà soát DN gốc.','Số HĐ chuyển đổi/tuần; DN nhóm roll'],
  ['4W','100% 4W ưu tiên Gốc lãi ≥ 36 tháng, ưu tiên 2 là gói 3,6%; HĐMM 4W giảm ~10% LTV max.','% HĐ 4W tenor ≥ 36T; %Rút net 4W'],
@@ -668,7 +672,7 @@ function render(){
  document.getElementById('subt').textContent=scopeName(S.pgd)+' · Dữ liệu '+ml(MON[0])+'–'+ml(MON[MON.length-1])+' · Kỳ hiển thị '+S.ky+' tháng';
  document.getElementById('subt').textContent+=S.asset==='all'?'':' · Tài sản '+S.asset.toUpperCase()+' (MT không tách tài sản – chỉ hiện TH)';
  heat();ktab();s3();s4();s5();
- const as=S.asset;S.asset='all';s6();csTab();s7();S.asset=as}
+ const as=S.asset;S.asset='all';s6();s7();S.asset=as}
 document.getElementById('upd').textContent=UPD;
 /* ---------- Combo bấm sticker: hiệu ứng + âm thanh tự tạo ---------- */
 (function(){
