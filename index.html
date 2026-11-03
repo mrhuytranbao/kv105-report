@@ -504,12 +504,14 @@ function s5(){
  const cmp=(v,k)=>S.pgd==='KV'||v==null||KVc[k]==null?'':` (KV ${pct(KVc[k],0)})`;
  let w10;const TH10=csTh(MON.indexOf(S.mon)),weak=[];
  [['cs_kn2','Kết nối 2'],['cs_lh','Liên hệ được']].forEach(([k,n])=>{if(me[k]!=null&&me[k]<TH10[k.slice(3)])weak.push(`${n} ${pct(me[k],k==='cs_hen'?1:0)} < ${pct(TH10[k.slice(3)],k==='cs_hen'?1:0)}`)});
- {const fl=last(fh)!=null&&last(fh)<.11,lhl=me.cs_lh!=null&&me.cs_lh<.7;
- if(fl&&T.f.dir<0&&lhl)w10=warn(`F2S HO ${pct(last(fh),2)} < 11% và đang giảm, Liên hệ được ${pct(me.cs_lh,0)} < 70%${me.cs_kn2!=null&&me.cs_kn2<.9?' (Kết nối 2 '+pct(me.cs_kn2,0)+' < 90%)':''} → F2S giảm do chăm đơn: gọi lại lần 2 trong 24h, đổi khung giờ gọi + Zalo song song.`);
- else if(fl&&T.f.dir<0)w10=warn(`F2S HO ${pct(last(fh),2)} < 11% và đang giảm nhưng Liên hệ được đạt ${pct(me.cs_lh,0)} → nghẽn ở khâu tư vấn – hẹn ra PGD, rà kịch bản chốt hẹn.`);
- else if(lhl)w10=warn(`Liên hệ được ${pct(me.cs_lh,0)} < 70% → tăng gọi lại lần 2, đổi khung giờ gọi để giữ F2S HO.`);
+ {const fKv=M.map(t=>{const x=agg(t,'KV')||{};return div(x.f2s_ho,x.form_ho)}),fT=last(fKv),fOk=last(fh)!=null&&fT!=null&&last(fh)>=fT;
+ const dn=[T.q2.dir<0?'Kết nối 2':'',T.lh.dir<0?'Liên hệ được':''].filter(Boolean);
+ const lw=[me.cs_kn2!=null&&me.cs_kn2<.9?'Kết nối 2 '+pct(me.cs_kn2,0)+' < 90%':'',me.cs_lh!=null&&me.cs_lh<.7?'Liên hệ được '+pct(me.cs_lh,0)+' < 70%':''].filter(Boolean);
+ if(T.f.dir<0&&dn.length)w10=warn(`F2S HO giảm cùng chiều với CSVH (${dn.join(', ')} giảm)${lw.length?'; dưới ngưỡng: '+lw.join(', '):''} → F2S giảm do chăm đơn: gọi lại lần 2 trong 24h, đổi khung giờ gọi + Zalo song song.`);
+ else if(T.f.dir<0)w10=warn(lw.length?`F2S HO giảm, CSVH không giảm thêm nhưng vẫn dưới ngưỡng (${lw.join(', ')}) → nâng Kết nối 2 / Liên hệ được trước, song song rà kịch bản tư vấn – hẹn ra PGD.`:'F2S HO giảm nhưng Kết nối 2 / Liên hệ được đạt và không giảm → nghẽn ở khâu tư vấn – hẹn ra PGD, rà kịch bản chốt hẹn.');
+ else if(lw.length)w10=warn(`CSVH dưới ngưỡng: ${lw.join(', ')}${fOk&&S.pgd!=='KV'?` dù F2S HO ${pct(last(fh))} đạt TB KV ${pct(fT)}`:''} → tăng gọi lại lần 2, đổi khung giờ gọi để giữ F2S HO.`);
  else w10='Phễu CSVH ổn định – duy trì gọi lại đủ 3 lần, ưu tiên đơn HO trong khung giờ vàng.';}
- draw('c10','C10 · CSVH đơn HO – Kết nối 2, 3 → Liên hệ được','% trên SL đơn HO · ngưỡng Kết nối 2 ≥ 90%, Liên hệ được ≥ 70% (Kết nối 3 tham khảo)',
+ draw('c10','C10 · CSVH đơn HO – Kết nối 2, 3 → Liên hệ được','% trên SL đơn HO · ngưỡng Kết nối 2 ≥ 90%, Liên hệ được ≥ 70% (Kết nối 3 tham khảo) · F2S HO so TB KV từng tháng',
    cm(`${ml(S.mon)}: KN2 ${pct(me.cs_kn2,0)}${cmp(me.cs_kn2,'cs_kn2')}, KN3 ${pct(me.cs_kn3,0)}${cmp(me.cs_kn3,'cs_kn3')}, Liên hệ ${pct(me.cs_lh,0)}${cmp(me.cs_lh,'cs_lh')}, Hẹn ra PGD ${pct(me.cs_hen,1)}${cmp(me.cs_hen,'cs_hen')}.`+(last(fh)!=null&&fh[fh.length-1]==null?' F2S HO tháng này chưa có số.':''),
    w10,`${tw('Kết nối 2',T.q2)} · ${tw('Liên hệ',T.lh)} · ${tw('F2S HO',T.f)}`),
   {data:{labels:X,datasets:[L('% Kết nối 2',q2,'#e0a800',{borderWidth:2.4,pointRadius:3,datalabels:Object.assign(dl(0,1),dlTop,{color:'#a87d00',display:true,formatter:v=>v==null?'':pct(v,0)})}),
@@ -640,7 +642,10 @@ function s7(){
   else if(g.g)sig.push(`Chênh GNN ${pct(g.gp,0)} (TB ${pct(TH.SG.m,0)}): thiếu ${fmt(g.gap)} tr/tháng`);
   if(!g.isNew&&g.r)sig.push(`%Rút DB ${pct(b.rut)} (TB ${pct(TH.SR.m)})${b.s4>=.3?', DN 4W '+pct(b.s4,0):''}`);
   if(!g.isNew&&g.f)sig.push(`%RFW DB ${pct(b.rfw)} (TB ${pct(TH.SF.m)})${hiTy.length?' · cao nhất RFW '+hiTy[0][0]+' '+pct(hiTy[0][1]):''}`);
-  const CD=csDiag(c,i);{const kh=trend(win(c,i,6,x=>x.ch_ho)),tf=trend(win(c,i,6,x=>div(x.f2s_ho,x.form_ho)),6,1),fl=CD.f!=null&&CD.f<.11;CD.bad=!!(CD.ok&&CD.key&&kh.dir<0&&fl&&tf.dir<0);if(CD.bad)CD.wk=['KHM HO giảm',`F2S HO ${pct(CD.f)} < 11% và đang giảm`]}
+  const CD=csDiag(c,i);{const tf=trend(win(c,i,6,x=>div(x.f2s_ho,x.form_ho)),6,1),t2=trend(win(c,i,6,x=>x.cs_kn2),6,1),tl=trend(win(c,i,6,x=>x.cs_lh),6,1),dn=[t2.dir<0?'Kết nối 2':'',tl.dir<0?'Liên hệ được':''].filter(Boolean);
+   CD.bad=!!(CD.ok&&tf.dir<0&&dn.length);
+   if(CD.bad){const v=CD.v;CD.wk=['F2S HO giảm '+pct(CD.f)+' (TB KV '+pct(CD.fK)+')'];CD.dx=`${dn.join(', ')} giảm cùng F2S (Kết nối 2 ${pct(v.kn2,0)}, Liên hệ được ${pct(v.lh,0)})`;
+    CD.key=`Rà CSVH đơn HO: gọi lại lần 2 trong 24h cho 100% đơn chưa liên hệ được, đổi khung giờ gọi (11h–13h, 17h–20h) + Zalo song song; mục tiêu Kết nối 2 ≥ 90%, Liên hệ được ≥ 70% (hiện ${pct(v.kn2,0)} / ${pct(v.lh,0)}).`}}
   if(CD.bad){const j=cs.indexOf('đơn HO (F2S giảm)');if(j>=0)cs.splice(j,1)}
   if(cs.length)sig.push('CSVH giảm: '+cs.join(', '));
  if(CD.bad)sig.push(`Phễu CSVH HO (${CD.wk.join(', ')}): ${CD.dx}`);
