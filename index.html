@@ -433,7 +433,7 @@ function s6(){
  const mat=rows.filter(x=>x.c&&x.r.age>18);
  const SG=msd(mat.map(x=>x.gp)),SR=msd(mat.map(x=>x.r.rut)),SF=msd(mat.map(x=>x.r.rfw));
  const TH={g1:0,g2:.2,r:SR.m+.5*SR.sd,f:SF.m+.5*SF.sd,SG,SR,SF};
- let h='<tr><th>PGD</th><th>Tuổi</th><th>DN đầu kỳ</th><th>%DN 4W</th><th>%Rút DB</th><th>%RFW DB</th><th>MT Net HO</th><th>KPI GNN HO</th><th>MT GNN BU</th><th>GNN dự báo<br><span class="sig">năng lực TB 3T</span></th><th>Biên ±<br><span class="sig">độ lệch 6T</span></th><th>Chênh MT BU − DB</th><th>%</th><th>MT KHM</th><th>MT Vay lại</th><th>MT Topup</th><th>Phân nhóm</th></tr>';
+ let h='<tr><th>PGD</th><th>Tuổi</th><th>DN đầu kỳ</th><th>%DN 4W</th><th>%Rút DB</th><th>%RFW DB</th><th>MT Net HO</th><th>KPI GNN HO</th><th>MT GNN BU</th><th>GNN dự báo<br><span class="sig">năng lực TB 3T</span></th><th>Biên ±<br><span class="sig">độ lệch 6T</span></th><th>Chênh MT BU − DB</th><th>%</th><th>MT GN KHM<br><span class="sig">triệu</span></th><th>MT GN Vay lại<br><span class="sig">triệu</span></th><th>MT GN Topup<br><span class="sig">triệu</span></th><th>Phân nhóm</th></tr>';
  const cg=(v,t1,t2)=>v==null?'':v>t2?'dn':'';
  rows.forEach(x=>{const {r,c,F,gap,gp}=x;const tot=!c;let grp=null;
   if(!tot){const isNew=r.age<=6,soft=!isNew&&r.age<=18;
@@ -488,10 +488,10 @@ function s7(){
   if(!g.isNew&&g.f)sig.push(`%RFW DB ${pct(b.rfw)} (TB ${pct(TH.SF.m)})${hiTy.length?' · cao nhất RFW '+hiTy[0][0]+' '+pct(hiTy[0][1]):''}`);
   if(cs.length)sig.push('CSVH giảm: '+cs.join(', '));
   /* Key ưu tiên theo nhóm */
-  const src=`KHM ${fmt(b.khm)} – Vay lại ${fmt(b.vl)} – Topup ${fmt(b.tu)}`;
-  if(g.isNew)act.push(`Tăng GNN là chính: mở rộng Trade địa bàn + Digital/Livestream, xây tệp KHM; chỉ tiêu nguồn ${src}.`);
-  else if(g.g===2&&!g.soft)act.push(`Tăng mạnh toàn bộ hoạt động tạo GNN (thiếu ${fmt(g.gap)} tr/tháng, +${pct(g.gp,0)} so năng lực): rà soát lại đơn HO, hoạt động MKT, KHQL; chia chỉ tiêu nguồn ${src}.`);
-  else if(g.g>=1)act.push(`Tăng thêm GNN (+${fmt(g.gap)} tr/tháng, +${pct(g.gp,0)} so năng lực): chia chỉ tiêu nguồn ${src}.`);
+  const nk=(D.recs.find(r=>r.t==='2026-11'&&r.p===c)||{}).mt_khm;const src=`GN KHM ${fmt(b.khm)} tr – GN Vay lại ${fmt(b.vl)} tr – GN Topup ${fmt(b.tu)} tr${nk!=null?` (KPI KHM T11: ${fmt(nk)} KH)`:''}`;
+  if(g.isNew)act.push(`Tăng GNN là chính: mở rộng Trade địa bàn + Digital/Livestream, xây tệp KHM; MT GNN theo nguồn ${src}.`);
+  else if(g.g===2&&!g.soft)act.push(`Tăng mạnh toàn bộ hoạt động tạo GNN (thiếu ${fmt(g.gap)} tr/tháng, +${pct(g.gp,0)} so năng lực): rà soát lại đơn HO, hoạt động MKT, KHQL; chia MT GNN theo nguồn ${src}.`);
+  else if(g.g>=1)act.push(`Tăng thêm GNN (+${fmt(g.gap)} tr/tháng, +${pct(g.gp,0)} so năng lực): chia MT GNN theo nguồn ${src}.`);
   const rutAct=b.s4>=.3?'dự phóng danh mục 4W đầu tháng, ưu tiên 4W Gốc lãi ≥ 36T và gói 5,4%':'giữ chân 2W: Re-call KH tất toán, chuyển gói 5,4%, kéo dài tenor';
   const rfwAct=(g.g===2&&!g.soft?'Duy trì kiểm soát RFW ở ngưỡng, HKTT hằng ngày':`Kiểm soát RFW${hiTy.length?' (tập trung '+hiTy.map(x=>x[0]).slice(0,2).join(', ')+')':''}: kiểm soát kỹ chân dung tệp ${hiTy.length&&hiTy[0][0]!=='4W'?hiTy[0][0]:'KHM'} đầu vào, 100% HKTT, LTV 4W max 62%`)+'.';
   const R=[];
