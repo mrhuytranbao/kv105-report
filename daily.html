@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KV 10.5 – Daily KPI</title>
+<title>KV 10.5 – Daily KPI</title><link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2714%27%20fill%3D%27%230b7a3e%27/%3E%3Crect%20x%3D%2712%27%20y%3D%2736%27%20width%3D%279%27%20height%3D%2716%27%20rx%3D%272%27%20fill%3D%27%23ffd23f%27/%3E%3Crect%20x%3D%2727%27%20y%3D%2726%27%20width%3D%279%27%20height%3D%2726%27%20rx%3D%272%27%20fill%3D%27%23ffd23f%27/%3E%3Crect%20x%3D%2742%27%20y%3D%2714%27%20width%3D%279%27%20height%3D%2738%27%20rx%3D%272%27%20fill%3D%27%23fff%27/%3E%3C/svg%3E">
 <style>
 :root{--g:#0b7a3e;--g2:#e8f3ec;--ink:#1d2a24;--mut:#6b7570;--line:#e3e7e4;--bg:#f6f7f6;--red:#c0392b;--grn:#1e8449;--yel:#b7950b}
 *{box-sizing:border-box}
@@ -43,6 +43,9 @@ th{background:var(--g);color:#fff;font-weight:700;padding:6px 8px;text-align:cen
 th.sub{background:#12904b;font-size:12px}
 td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right}
 td:first-child{text-align:left;position:sticky;left:0;background:inherit;z-index:1}
+body.dv main>*:not(#sdata){display:none !important}body.dv #sdata{display:block !important;margin-top:0}
+.dtool{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.dtool label{font-weight:700;font-size:13px}.dtool select{border:1px solid var(--line);margin-left:6px}.dtool button{border:0;background:var(--g);color:#fff;border-radius:7px;padding:8px 14px;font-weight:700;cursor:pointer}
+#tdata th{position:sticky;top:0;z-index:3}#tdata td{font-size:12.5px}
 th.pg{text-align:left;position:sticky;left:0;z-index:2;min-width:230px}
 td.pn{font-weight:600;font-size:12.5px}td.pn.top{color:#1e8449;font-weight:800}td.pn.bot{color:#c0392b;font-weight:800}th.dh,td.dlt{width:70px;max-width:78px;font-size:12px;white-space:normal}
 .dt td,.dt th{text-align:right}.dt td:first-child,.dt th:first-child{text-align:left;font-weight:700}.dt .up{color:var(--grn);font-weight:800}.dt .dn{color:var(--red);font-weight:800}
@@ -96,6 +99,10 @@ body.emb header{display:none}body.emb main{padding-top:12px}
   <div class="card"><div class="cap"></div><table class="dt" id="t5"></table><div class="note" id="n5"></div></div>
   <div class="grid3"><div class="card"><div class="chw"><canvas id="c1"></canvas></div></div><div class="card"><div class="chw"><canvas id="c2"></canvas></div></div>
   <div class="card"><div class="chw"><canvas id="c3"></canvas></div></div><div class="card"><div class="chw"><canvas id="c4"></canvas></div></div></div></section>
+ <section id="sdata" style="display:none"><div class="sh"><h2>📥 Data thô theo ngày × PGD</h2><span class="d">Nguồn BI · số lũy kế từ đầu tháng đến hết ngày dữ liệu · tiền: triệu đồng</span></div>
+  <div class="card"><div class="dtool"><label>PGD <select id="fp"><option value="">Tất cả 15 PGD + KV</option></select></label><label>Ngày <select id="fd"><option value="">Tất cả ngày</option></select></label>
+   <button id="dcsv">⬇ Tải Excel (CSV)</button><span id="dcnt" class="d"></span></div><div style="overflow:auto;max-height:75vh"><table id="tdata"></table></div>
+   <div class="note">Mỗi dòng = 1 PGD tại 1 ngày dữ liệu (lũy kế tháng). Tải về mở bằng Excel; lọc theo PGD/Ngày trước khi tải để lấy đúng phần cần dùng.</div></div></section>
 </main>
 <script>/*!
  * Chart.js v4.6.1
@@ -278,7 +285,32 @@ async function shot(sid){const s=document.getElementById(sid),c=s.querySelector(
  const tb=c.querySelector('table');const w=Math.max(c.scrollWidth,tb.scrollWidth+30);
  const cv=await html2canvas(c,{scale:2,backgroundColor:'#fff',width:w,windowWidth:w+60});s.classList.remove('shot');c.style.overflow='';
  const a=document.createElement('a');a.download=`KV105_${sid}_${DAY.date}.png`;a.href=cv.toDataURL('image/png');a.click()}
+
+const DCOL=[['Ngày',r=>r._d],['Mã PGD',r=>r._code],['Tên PGD',r=>r._nm],['DN đầu kỳ',r=>r.dk],
+ ['Net MT',r=>r.net.mt],['Net TH',r=>r.net.th],['Net vs cùng kỳ',r=>r.net.vs],['Net dự báo',r=>r.net.db],
+ ['GNN MT',r=>r.gnn.mt],['GNN KPI HO',r=>r.gnn.ho],['GNN TH',r=>r.gnn.th],['GNN 2W',r=>r.gnn.th2],['GNN 4W',r=>r.gnn.th4],['GNN dự báo',r=>r.gnn.db],
+ ['GN KHM MT',r=>r.src.khm.mt],['GN KHM TH',r=>r.src.khm.th],['GN KHM 2W',r=>r.src.khm2.th],['GN KHM 4W',r=>r.src.khm4.th],
+ ['GNN KHQL MT',r=>r.src.khql?r.src.khql.mt:null],['GNN KHQL TH',r=>r.src.khql?r.src.khql.th:null],['Vay lại 2W',r=>r.src.vl2.th],['Vay lại 4W',r=>r.src.vl4.th],['Topup 2W',r=>r.src.tu2.th],['Topup 4W',r=>r.src.tu4.th],
+ ['SL KHM MT',r=>r.ksl.mt],['SL KHM KPI HO',r=>r.ksl.ho],['SL KHM TH',r=>r.ksl.th],['SL KHM 4W',r=>r.ksl.th4],
+ ['%RFW MT',r=>r.rfw.mt,1],['%RFW TH',r=>r.rfw.th,1],['%RFW cùng kỳ',r=>r.rfw.ck,1],['RFW TH (tr)',r=>r.rfw.amt],
+ ['Rút tách đáo (tr)',r=>r.rut.th],['%Rút tách đáo',r=>r.rut.thp,1],['%TLT TH',r=>r.tlt.th,1],['%TLT MT',r=>r.tlt.mt,1]];
+let DROWS=[];
+function buildData(){DROWS=[];D.days.forEach(d=>{const c=calc(d),ds=d.date.split('-').reverse().join('/');
+  c.R.forEach(r=>{r._d=ds;r._code=D.codes[r.i];r._nm=D.names[r.i];DROWS.push(Object.assign({},r,{_k:D.codes[r.i]}))});
+  const T=c.T;T._d=ds;T._code='KV';T._nm='TỔNG KV 10.5';DROWS.push(Object.assign({},T,{_k:'KV'}))});
+ const fp=document.getElementById('fp'),fd=document.getElementById('fd');
+ fp.innerHTML='<option value="">Tất cả 15 PGD + KV</option><option value="KV">TỔNG KV 10.5</option>'+D.codes.map((c,i)=>`<option value="${c}">${D.names[i]}</option>`).join('');
+ fd.innerHTML='<option value="">Tất cả ngày</option>'+[...D.days].reverse().map(d=>`<option>${d.date.split('-').reverse().join('/')}</option>`).join('');
+ fp.onchange=fd.onchange=drawData;document.getElementById('dcsv').onclick=dlCSV;drawData()}
+function fData(){const p=document.getElementById('fp').value,d=document.getElementById('fd').value;return DROWS.filter(r=>(!p||r._k===p)&&(!d||r._d===d)).sort((a,b)=>b._d.split('/').reverse().join('').localeCompare(a._d.split('/').reverse().join(''))||0)}
+function drawData(){const A=fData();document.getElementById('dcnt').textContent=A.length+' dòng';
+ document.getElementById('tdata').innerHTML='<thead><tr>'+DCOL.map(c=>`<th>${c[0]}</th>`).join('')+'</tr></thead><tbody>'+
+  A.map(r=>`<tr${r._k==='KV'?' class="tot"':''}>`+DCOL.map((c,j)=>{const v=c[1](r);return `<td${j<3?' style="text-align:left"':''}>${j<3?v:(c[2]?pct(v,2):fmt(v,Math.abs(v)<100&&v%1?1:0))}</td>`}).join('')+'</tr>').join('')+'</tbody>';postH()}
+function dlCSV(){const A=fData(),q=v=>{if(v==null||(typeof v==='number'&&!isFinite(v)))return'';if(typeof v==='number')return String(Math.round(v*10000)/10000);return '"'+String(v).replace(/"/g,'""')+'"'};
+ const csv='﻿'+[DCOL.map(c=>q(c[0])).join(','),...A.map(r=>DCOL.map(c=>q(c[1](r))).join(','))].join('\r\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=`KV105_Data_${D.mon}${document.getElementById('fp').value?'_'+document.getElementById('fp').value:''}.csv`;a.click()}
 function init(){
+ if(new URLSearchParams(location.search).get('view')==='data'||location.hash==='#data'){document.body.classList.add('dv');buildData();return}
  const sel=document.getElementById('day');if(EMB)document.getElementById('dslot').appendChild(sel);
  sel.innerHTML=D.days.map((d,i)=>`<option value="${i}">${d.date.split('-').reverse().join('/')}</option>`).reverse().join('');
  DAY=D.days[D.days.length-1];sel.value=D.days.length-1;sel.onchange=()=>{DAY=D.days[+sel.value];render()};
