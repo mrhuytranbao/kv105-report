@@ -44,7 +44,7 @@ th.sub{background:#12904b;font-size:12px}
 td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right}
 td:first-child{text-align:left;position:sticky;left:0;background:inherit;z-index:1}
 th.pg{text-align:left;position:sticky;left:0;z-index:2;min-width:230px}
-td.pn{font-weight:600;font-size:12.5px}
+td.pn{font-weight:600;font-size:12.5px}td.pn.top{color:#1e8449;font-weight:800}td.pn.bot{color:#c0392b;font-weight:800}th.dh,td.dlt{width:62px;max-width:70px;font-size:12px}
 .dt td,.dt th{text-align:right}.dt td:first-child,.dt th:first-child{text-align:left;font-weight:700}.dt .up{color:var(--grn);font-weight:800}.dt .dn{color:var(--red);font-weight:800}
 .grid3{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
 tbody tr{background:#fff}tbody tr:nth-child(even){background:#fafcfb}
@@ -92,7 +92,7 @@ body.emb header{display:none}body.emb main{padding-top:12px}
  <section id="s4"><div class="sh"><h2>4. RFW – Rút tách đáo – Trễ hạn</h2><span class="d">Rút tách đáo TH = GNN − Net − RFW</span><button data-s="s4">📸 Tải ảnh</button></div>
   <div class="card"><div class="cap"></div><table id="t4"></table><div class="note">%HT RFW = 2 − TH/MT (thấp hơn MT là tốt) · %RFW & %Rút dự báo theo thiết lập của QLKV trong file Tracking.</div></div></section>
 
- <section id="s5"><div class="sh"><h2>5. Diễn biến theo ngày</h2><span class="d">So với hôm qua (+/−) · cột = phát sinh trong ngày, đường = lũy kế · đường đỏ đứt = MT chạy đều theo ngày</span><button data-s="s5">📸 Tải ảnh</button></div>
+ <section id="s5"><div class="sh"><h2>5. Diễn biến theo ngày</h2><span class="d">± vs T-1 = so với ngày hôm trước · cột = phát sinh trong ngày, đường = lũy kế · đường đỏ đứt = MT chạy đều theo ngày</span><button data-s="s5">📸 Tải ảnh</button></div>
   <div class="card"><div class="cap"></div><table class="dt" id="t5"></table><div class="note" id="n5"></div></div>
   <div class="grid3"><div class="card"><div class="chw"><canvas id="c1"></canvas></div></div><div class="card"><div class="chw"><canvas id="c2"></canvas></div></div>
   <div class="card"><div class="chw"><canvas id="c3"></canvas></div></div><div class="card"><div class="chw"><canvas id="c4"></canvas></div></div></div></section>
@@ -167,6 +167,7 @@ function calc(day){
   const S=(k2,t1,th)=>({mt:MT[k2][i],t1,th,db:th*k});
   o.src={khm:S('khm',d.khm.t1[i],d.khm.th[i]),khm2:S('khm2',D.t1x.khm2[i],d.khm.th2[i]),khm4:S('khm4',D.t1x.khm4[i],d.khm.th4[i]),
    vl2:S('vl2',d.vl.t1_2[i],d.vl.th2[i]),vl4:S('vl4',d.vl.t1_4[i],d.vl.th4[i]),tu2:S('tu2',d.tu.t1_2[i],d.tu.th2[i]),tu4:S('tu4',d.tu.t1_4[i],d.tu.th4[i])};
+  {const q=['vl2','vl4','tu2','tu4'].map(x=>o.src[x]);o.src.khql={mt:sum(q.map(x=>x.mt)),t1:sum(q.map(x=>x.t1)),th:sum(q.map(x=>x.th)),db:sum(q.map(x=>x.db))}}
   R.push(o)}
  const T={sh:'TỔNG KV',name:'TỔNG KV',dk:sum(dk)};
  const sm=(g,f)=>sum(R.map(r=>r[g][f]));
@@ -179,13 +180,14 @@ function calc(day){
  T.ksl={};['t1','ho','mt','th','th4','th2','db'].forEach(f=>T.ksl[f]=d.khmsl||f==='mt'?sum(R.map(r=>r.ksl[f])):undefined);
  T.src={};for(const s in R[0].src)T.src[s]={mt:sum(R.map(r=>r.src[s].mt)),t1:sum(R.map(r=>r.src[s].t1)),th:sum(R.map(r=>r.src[s].th)),db:sum(R.map(r=>r.src[s].db))};
  return{R,T,dn,k}}
-function rowsHTML(R,T,f){return R.map(r=>`<tr>${f(r)}</tr>`).join('')+`<tr class="tot">${f(T)}</tr>`}
+function rowsHTML(R,T,f,key){let A=R;if(key){A=[...R].sort((a,b)=>{const x=key(a),y=key(b);return (y==null?-1e9:y)-(x==null?-1e9:x)})}const V=A.filter(r=>key&&key(r)!=null);A.forEach(r=>{const i=V.indexOf(r);r._c=!key||i<0?'':i<3?'top':i>=V.length-3?'bot':''});T._c='';return A.map(r=>`<tr>${f(r)}</tr>`).join('')+`<tr class="tot">${f(T)}</tr>`}
 function render(){
  const {R,T,dn}=calc(DAY);const tp=dn/ND;
  const PD=D.days.filter(z=>z.date<DAY.date).pop(),PV=PD?calc(PD):null;R.forEach((r,i)=>r.pv=PV?PV.R[i]:null);T.pv=PV?PV.T:null;
  const dl=(r,f,isP,inv)=>{if(!r.pv)return'<td class="dlt">–</td>';const v=f(r),p=f(r.pv);if(v==null||p==null)return'<td class="dlt">–</td>';const x=v-p,good=inv?x<=0:x>=0;
   return `<td class="dlt ${x===0?'':good?'g':'r'}">${x>0?'+':''}${isP?(x*100).toFixed(2).replace('.',',')+'đ%':fmt(x)}</td>`};
- const DH=PD?`<th class="sub">+/− hôm qua</th>`:`<th class="sub">+/− hôm qua</th>`;
+ const DH=`<th class="sub dh">± vs T-1</th>`;
+ const gp=(mt,th)=>th==null||mt==null?'–':mt-th<=0?'<span class="g">Đạt</span>':fmt((mt-th)/Math.max(1,ND-dn),mt-th<100*(ND-dn)?1:0);
  document.getElementById('dd').textContent=DAY.date.split('-').reverse().join('/');
  document.getElementById('pb').style.width=(tp*100)+'%';document.getElementById('pt').textContent=`${dn}/${ND} ngày = ${pct(tp,0)}`;
  document.getElementById('subt').textContent=`Tháng ${+D.mon.slice(5)}/${D.mon.slice(0,4)} · số TH theo BI hết ngày ${DAY.date.split('-').reverse().join('/')} · ${DAY.src||''}`;
@@ -211,28 +213,28 @@ function render(){
  /* T1 Net */
  document.getElementById('t1').innerHTML=`<thead><tr><th rowspan="2" class="pg">PGD</th><th rowspan="2">DN đầu kỳ</th><th colspan="3">DNTH</th><th colspan="8">Tăng Net</th></tr>
   <tr><th class="sub">MT</th><th class="sub">TH</th><th class="sub">%HT</th><th class="sub">T-1</th><th class="sub">MT</th><th class="sub">TH</th>${DH}<th class="sub">%HT</th><th class="sub">vs cùng kỳ</th><th class="sub">Dự báo</th><th class="sub">%DB</th></tr></thead><tbody>`+
-  rowsHTML(R,T,r=>{const h=div(r.net.th,r.net.mt),db=div(r.net.db,r.net.mt);return `<td class="pn">${r.name}</td><td>${fmt(r.dk)}</td><td class="gp">${fmt(r.dk+r.net.mt)}</td><td>${fmt(r.dk+r.net.th)}</td><td class="${cl(div(r.dk+r.net.th,r.dk+r.net.mt),.99)}">${pct(div(r.dk+r.net.th,r.dk+r.net.mt))}</td>
-   <td class="gp">${fmt(r.net.t1)}</td><td>${fmt(r.net.mt)}</td><td class="${r.net.th<0?'r':'g'}">${fmt(r.net.th)}</td>${dl(r,x=>x.net.th)}<td class="${cl(h/tp)}">${pct(h,0)}</td><td>${sgn(r.net.vs)}</td><td><b>${fmt(r.net.db)}</b></td><td class="${bg(db)}">${pct(db,0)}</td>`})+'</tbody>';
+  rowsHTML(R,T,r=>{const h=div(r.net.th,r.net.mt),db=div(r.net.db,r.net.mt);return `<td class="pn ${r._c||''}">${r.name}</td><td>${fmt(r.dk)}</td><td class="gp">${fmt(r.dk+r.net.mt)}</td><td>${fmt(r.dk+r.net.th)}</td><td class="${cl(div(r.dk+r.net.th,r.dk+r.net.mt),.99)}">${pct(div(r.dk+r.net.th,r.dk+r.net.mt))}</td>
+   <td class="gp">${fmt(r.net.t1)}</td><td>${fmt(r.net.mt)}</td><td class="${r.net.th<0?'r':'g'}">${fmt(r.net.th)}</td>${dl(r,x=>x.net.th)}<td class="${cl(h/tp)}">${pct(h,0)}</td><td>${sgn(r.net.vs)}</td><td><b>${fmt(r.net.db)}</b></td><td class="${bg(db)}">${pct(db,0)}</td>`},r=>div(r.net.db,r.net.mt))+'</tbody>';
  /* T2 GNN */
- document.getElementById('t2').innerHTML=`<thead><tr><th class="pg">PGD</th><th>T-1</th><th>KPI HO</th><th>MT</th><th>TH</th><th>+/− hôm qua</th><th>TH 2W</th><th>TH 4W</th><th>%HT</th><th>Dự báo</th><th>%DB</th><th>DB vs T-1</th></tr></thead><tbody>`+
-  rowsHTML(R,T,r=>{const g=r.gnn,h=div(g.th,g.mt),db=div(g.db,g.mt),vt=div(g.db-g.t1,g.t1);return `<td class="pn">${r.name}</td><td>${fmt(g.t1)}</td><td>${fmt(g.ho)}</td><td><b>${fmt(g.mt)}</b></td><td><b>${fmt(g.th)}</b></td>${dl(r,x=>x.gnn.th)}<td>${fmt(g.th2)}</td><td>${fmt(g.th4)}</td><td class="${cl(h/tp)}">${pct(h,0)}</td><td>${fmt(g.db)}</td><td class="${bg(db)}">${pct(db,0)}</td><td class="${vt>=0?'g':'r'}">${pct(vt,0)}</td>`})+'</tbody>';
+ document.getElementById('t2').innerHTML=`<thead><tr><th class="pg">PGD</th><th>T-1</th><th>KPI HO</th><th>MT</th><th>TH</th><th class="dh">± vs T-1</th><th>TH 2W</th><th>TH 4W</th><th>%HT</th><th>Dự báo</th><th>%DB</th><th>GAP ngày</th><th>DB vs T-1</th></tr></thead><tbody>`+
+  rowsHTML(R,T,r=>{const g=r.gnn,h=div(g.th,g.mt),db=div(g.db,g.mt),vt=div(g.db-g.t1,g.t1);return `<td class="pn ${r._c||''}">${r.name}</td><td>${fmt(g.t1)}</td><td>${fmt(g.ho)}</td><td><b>${fmt(g.mt)}</b></td><td><b>${fmt(g.th)}</b></td>${dl(r,x=>x.gnn.th)}<td>${fmt(g.th2)}</td><td>${fmt(g.th4)}</td><td class="${cl(h/tp)}">${pct(h,0)}</td><td>${fmt(g.db)}</td><td class="${bg(db)}">${pct(db,0)}</td><td>${gp(g.mt,g.th)}</td><td class="${vt>=0?'g':'r'}">${pct(vt,0)}</td>`},r=>div(r.gnn.th,r.gnn.mt))+'</tbody>';
  /* T2b KHM số lượng */
- document.getElementById('t2b').innerHTML=`<thead><tr><th class="pg">PGD</th><th>T-1</th><th>KPI HO</th><th>MT</th><th>TH</th><th>+/− hôm qua</th><th>TH 2W</th><th>TH 4W</th><th>%HT</th><th>Dự báo</th><th>%DB</th><th>Cần/ngày còn lại</th></tr></thead><tbody>`+
-  rowsHTML(R,T,r=>{const q=r.ksl,h=div(q.th,q.mt),db=div(q.db,q.mt),need=q.th==null?null:Math.max(0,(q.mt-q.th)/Math.max(1,ND-dn));return `<td class="pn">${r.name}</td><td>${fmt(q.t1)}</td><td>${fmt(q.ho)}</td><td><b>${fmt(q.mt)}</b></td><td><b>${fmt(q.th)}</b></td>${dl(r,x=>x.ksl.th)}<td>${fmt(q.th2)}</td><td>${fmt(q.th4)}</td><td class="${cl(h/tp)}">${pct(h,0)}</td><td>${fmt(q.db)}</td><td class="${bg(db)}">${pct(db,0)}</td><td>${need==null?'–':fmt(need,1)}</td>`})+'</tbody>';
+ document.getElementById('t2b').innerHTML=`<thead><tr><th class="pg">PGD</th><th>T-1</th><th>KPI HO</th><th>MT</th><th>TH</th><th class="dh">± vs T-1</th><th>TH 2W</th><th>TH 4W</th><th>%HT</th><th>Dự báo</th><th>%DB</th><th>GAP ngày</th></tr></thead><tbody>`+
+  rowsHTML(R,T,r=>{const q=r.ksl,h=div(q.th,q.mt),db=div(q.db,q.mt),need=q.th==null?null:Math.max(0,(q.mt-q.th)/Math.max(1,ND-dn));return `<td class="pn ${r._c||''}">${r.name}</td><td>${fmt(q.t1)}</td><td>${fmt(q.ho)}</td><td><b>${fmt(q.mt)}</b></td><td><b>${fmt(q.th)}</b></td>${dl(r,x=>x.ksl.th)}<td>${fmt(q.th2)}</td><td>${fmt(q.th4)}</td><td class="${cl(h/tp)}">${pct(h,0)}</td><td>${fmt(q.db)}</td><td class="${bg(db)}">${pct(db,0)}</td><td>${gp(q.mt,q.th)}</td>`},r=>div(r.ksl.th,r.ksl.mt))+'</tbody>';
  /* T3 nguồn */
  const SRC=[['khm','KHM tổng'],['khm2','KHM 2W'],['khm4','KHM 4W'],['vl2','KHQL 2W'],['vl4','KHQL 4W'],['tu2','Topup 2W'],['tu4','Topup 4W']];
- const t3=(id,SRC)=>{document.getElementById(id).innerHTML=`<thead><tr><th rowspan="2" class="pg">PGD</th>${SRC.map(s=>`<th colspan="5">${s[1]}</th>`).join('')}</tr><tr>${SRC.map(()=>'<th class="sub">T-1</th><th class="sub">MT</th><th class="sub">TH</th><th class="sub">Dự báo</th><th class="sub">%DB</th>').join('')}</tr></thead><tbody>`+
-  rowsHTML(R,T,r=>`<td class="pn">${r.name}</td>`+SRC.map(([k])=>{const s=r.src[k],db=div(s.db,s.mt);return `<td class="gp">${fmt(s.t1)}</td><td>${fmt(s.mt)}</td><td><b>${fmt(s.th)}</b></td><td>${fmt(s.db)}</td><td class="${s.mt?bg(db):''}">${s.mt?pct(db,0):(s.th?'Vô hạn':'–')}</td>`}).join(''))+'</tbody>'};
- t3('t3',[['khm','GN KHM tổng'],['khm2','KHM 2W'],['khm4','KHM 4W']]);
- t3('t3b',[['vl2','KHQL 2W'],['vl4','KHQL 4W'],['tu2','Topup 2W'],['tu4','Topup 4W']]);
+ const t3=(id,SRC,kk)=>{document.getElementById(id).innerHTML=`<thead><tr><th rowspan="2" class="pg">PGD</th>${SRC.map(s=>`<th colspan="5">${s[1]}</th>`).join('')}</tr><tr>${SRC.map(()=>'<th class="sub">T-1</th><th class="sub">MT</th><th class="sub">TH</th><th class="sub">Dự báo</th><th class="sub">%DB</th>').join('')}</tr></thead><tbody>`+
+  rowsHTML(R,T,r=>`<td class="pn ${r._c||''}">${r.name}</td>`+SRC.map(([k])=>{const s=r.src[k],db=div(s.db,s.mt);return `<td class="gp">${fmt(s.t1)}</td><td>${fmt(s.mt)}</td><td><b>${fmt(s.th)}</b></td><td>${fmt(s.db)}</td><td class="${s.mt?bg(db):''}">${s.mt?pct(db,0):(s.th?'Vô hạn':'–')}</td>`}).join(''),r=>div(r.src[kk].th,r.src[kk].mt))+'</tbody>'};
+ t3('t3',[['khm','GN KHM tổng'],['khm2','KHM 2W'],['khm4','KHM 4W']],'khm');
+ t3('t3b',[['khql','GNN KHQL tổng'],['vl2','Vay lại 2W'],['vl4','Vay lại 4W'],['tu2','Topup 2W'],['tu4','Topup 4W']],'khql');
  /* T4 RFW – Rút – TLT */
- document.getElementById('t4').innerHTML=`<thead><tr><th rowspan="2" class="pg">PGD</th><th colspan="9">%RFW</th><th colspan="5">Rút tách đáo</th><th colspan="4">Tỷ lệ trễ hạn</th></tr>
+ document.getElementById('t4').innerHTML=`<thead><tr><th rowspan="2" class="pg">PGD</th><th colspan="9">%RFW</th><th colspan="6">Rút tách đáo</th><th colspan="4">Tỷ lệ trễ hạn</th></tr>
   <tr><th class="sub">T-1</th><th class="sub">MT</th><th class="sub">TH</th>${DH}<th class="sub">%HT</th><th class="sub">Cùng kỳ T-1</th><th class="sub">vs cùng kỳ</th><th class="sub">TH (tr)</th><th class="sub">Dự báo</th>
-  <th class="sub">%T-1</th><th class="sub">TH (tr)</th><th class="sub">%TH</th><th class="sub">%Dự báo</th><th class="sub">Tiến độ</th><th class="sub">T-1</th><th class="sub">TH</th>${DH}<th class="sub">%HT</th></tr></thead><tbody>`+
+  <th class="sub">%T-1</th><th class="sub">TH (tr)</th>${DH}<th class="sub">%TH</th><th class="sub">%Dự báo</th><th class="sub">Tiến độ</th><th class="sub">T-1</th><th class="sub">TH</th>${DH}<th class="sub">%HT</th></tr></thead><tbody>`+
   rowsHTML(R,T,r=>{const f=r.rfw,h=f.th==null?null:2-f.th/f.mt,u=r.rut,tg=div(u.thp,(u.db||0)*tp),t=r.tlt,ht=2-t.th/t.mt;
-   return `<td class="pn">${r.name}</td><td class="gp">${pct(f.t1,2)}</td><td>${pct(f.mt,2)}</td><td class="${f.th!=null&&f.th>f.mt?'r':'g'}"><b>${pct(f.th,2)}</b></td>${dl(r,x=>x.rfw.th,1,1)}<td class="${bg(h)}">${pct(h,0)}</td><td>${pct(f.ck,2)}</td><td class="${f.vs==null?'':f.vs>0?'r':'g'}">${f.vs==null?'–':(f.vs>0?'+':'')+(f.vs*100).toFixed(2).replace('.',',')+'%'}</td><td>${fmt(f.amt)}</td><td>${pct(f.db,1)}</td>
-   <td class="gp">${pct(u.t1p,1)}</td><td>${fmt(u.th)}</td><td>${pct(u.thp,2)}</td><td>${pct(u.db,1)}</td><td class="${tg==null?'':tg<=1?'g':'r'}">${tg==null?'–':pct(tg,0)}</td>
-   <td class="gp">${pct(t.t1,1)}</td><td class="${t.th>t.mt?'r':'g'}"><b>${pct(t.th,1)}</b></td>${dl(r,x=>x.tlt.th,1,1)}<td class="${bg(ht)}">${pct(ht,0)}</td>`})+'</tbody>'+
+   return `<td class="pn ${r._c||''}">${r.name}</td><td class="gp">${pct(f.t1,2)}</td><td>${pct(f.mt,2)}</td><td class="${f.th!=null&&f.th>f.mt?'r':'g'}"><b>${pct(f.th,2)}</b></td>${dl(r,x=>x.rfw.amt,0,1)}<td class="${bg(h)}">${pct(h,0)}</td><td>${pct(f.ck,2)}</td><td class="${f.vs==null?'':f.vs>0?'r':'g'}">${f.vs==null?'–':(f.vs>0?'+':'')+(f.vs*100).toFixed(2).replace('.',',')+'%'}</td><td>${fmt(f.amt)}</td><td>${pct(f.db,1)}</td>
+   <td class="gp">${pct(u.t1p,1)}</td><td>${fmt(u.th)}</td>${dl(r,x=>x.rut.th,0,1)}<td>${pct(u.thp,2)}</td><td>${pct(u.db,1)}</td><td class="${tg==null?'':tg<=1?'g':'r'}">${tg==null?'–':pct(tg,0)}</td>
+   <td class="gp">${pct(t.t1,1)}</td><td class="${t.th>t.mt?'r':'g'}"><b>${pct(t.th,1)}</b></td>${dl(r,x=>x.tlt.th,1,1)}<td class="${bg(ht)}">${pct(ht,0)}</td>`},r=>r.rfw.mt&&r.rfw.th!=null?2-r.rfw.th/r.rfw.mt:null)+'</tbody>'+
   '';
  charts();postH()}
 function postH(){if(EMB)setTimeout(()=>parent.postMessage({kvh:document.documentElement.scrollHeight},'*'),60)}
@@ -249,7 +251,7 @@ function charts(){
  const M=[['Tăng Net (tr)',t=>t.net.th,0,0],['Giải ngân Net (tr)',t=>t.gnn.th,0,0],['GN KHM (tr)',t=>t.src.khm.th,0,0],['KHM (KH)',t=>t.ksl.th,0,0],['%RFW',t=>t.rfw.th,1,1],['RFW (tr)',t=>t.rfw.amt,0,1],['%Rút tách đáo',t=>t.rut.thp,1,1],['Rút tách đáo (tr)',t=>t.rut.th,0,1],['Tỷ lệ trễ hạn',t=>t.tlt.th,1,1]];
  const dd=(v,p,isP,inv)=>{if(v==null||p==null)return'<td>–</td>';const d=v-p;const good=inv?d<=0:d>=0;return `<td class="${good?'up':'dn'}">${d>0?'+':''}${isP?(d*100).toFixed(2).replace('.',',')+' đ%':fmt(d)}</td>`};
  const pd=prev?prev.date.split('-').reverse().slice(0,2).join('/'):'';
- document.getElementById('t5').innerHTML=`<thead><tr><th class="pg" style="min-width:180px">Chỉ tiêu KV</th><th>Hôm nay (${DAY.date.split('-').reverse().slice(0,2).join('/')})</th><th>Hôm qua${pd?' ('+pd+')':''}</th><th>+/− so hôm qua</th><th>MT tháng</th></tr></thead><tbody>`+
+ document.getElementById('t5').innerHTML=`<thead><tr><th class="pg" style="min-width:180px">Chỉ tiêu KV</th><th>Hôm nay (${DAY.date.split('-').reverse().slice(0,2).join('/')})</th><th>Hôm qua${pd?' ('+pd+')':''}</th><th>± vs T-1</th><th>MT tháng</th></tr></thead><tbody>`+
   M.map(([n,f,isP,inv])=>{const v=f(T),p=P?f(P):null,mt={'Tăng Net (tr)':T.net.mt,'Giải ngân Net (tr)':T.gnn.mt,'GN KHM (tr)':T.src.khm.mt,'KHM (KH)':T.ksl.mt,'%RFW':T.rfw.mt,'Tỷ lệ trễ hạn':T.tlt.mt,'%Rút tách đáo':T.rut.db}[n];
    return `<tr><td>${n}</td><td><b>${isP?pct(v,2):fmt(v)}</b></td><td>${p==null?'–':isP?pct(p,2):fmt(p)}</td>${dd(v,p,isP,inv)}<td>${mt==null?'':isP?(n.includes('Rút')?'DB ':'≤ ')+pct(mt,1):fmt(mt)}</td></tr>`}).join('')+'</tbody>';
  document.getElementById('n5').textContent=prev?'+/− = lũy kế hôm nay − lũy kế hôm qua (= phát sinh trong ngày); với tỷ lệ là chênh lệch điểm %.':'Chưa có số ngày trước – cột +/− sẽ hiện từ ngày dữ liệu tiếp theo.';
