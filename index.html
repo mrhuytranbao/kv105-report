@@ -127,7 +127,8 @@ footer{text-align:center;color:var(--mut);font-size:12px;padding:20px}
 .vw button{border:0;background:transparent;color:#fff;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13.5px;font-weight:600}
 .vw button.on{background:#f1c40f;color:#5a3d00}
 #khkd{display:none;max-width:1320px;margin:0 auto;padding:16px 24px 6px}
-body.kh main,body.kh nav,body.kh .filters{display:none}
+body.kh main,body.kh nav,body.kh .filters,body.dl main,body.dl nav,body.dl .filters,body.dl #khkd{display:none}
+#dlw{display:none;max-width:1540px;margin:0 auto;padding:0 2px}body.dl #dlw{display:block}#dlw iframe{width:100%;border:0;display:block;min-height:900px}
 body.kh #khkd{display:block}
 .ktool{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
 .ktool button{border:0;background:var(--g);color:#fff;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;font-size:14px}
@@ -223,7 +224,7 @@ body.kh #khkd{display:block}
 <header>
  <div class="hrow">
   <div><h1>KV 10.5 Vĩnh Long – Bến Tre · Báo cáo phân tích KPI</h1><div class="sub" id="subt"></div></div>
-  <div class="vw" id="view"><button data-v="db" class="on">📊 Dashboard</button><button data-v="kh">🎯 KHKD tháng</button><a href="daily.html" style="color:#fff;text-decoration:none;padding:7px 14px;border-radius:6px;font-size:13.5px;font-weight:600">📅 Daily</a></div>
+  <div class="vw" id="view"><button data-v="db" class="on">📊 Dashboard</button><button data-v="kh">🎯 KHKD tháng</button><button data-v="dl">📅 Daily</button></div>
   <div class="filters">
    <label>Kỳ</label><div class="seg" id="ky"><button data-v="3">3 tháng</button><button data-v="6" class="on">6 tháng</button><button data-v="12">12 tháng</button></div>
    <label>Tài sản</label><div class="seg" id="asset"><button data-v="all" class="on">Tất cả</button><button data-v="2w">2W</button><button data-v="4w">4W</button></div>
@@ -281,6 +282,7 @@ body.kh #khkd{display:block}
 </section>
 </main>
 <div id="khkd"><div class="ktool"><button onclick="KP.i=0;kpres(true)">▶ Trình chiếu</button><span>Phím ← → để chuyển slide · Esc để thoát · số liệu tự cập nhật theo dữ liệu tháng mới nhất</span></div><div id="khs"></div></div>
+<div id="dlw"><iframe id="dlf" title="Daily KPI"></iframe></div>
 <div id="kov"><div class="stage"></div><div class="zl" onclick="KP.i--;kshow()"></div><div class="zr" onclick="KP.i++;kshow()"></div><div class="ctl"><button onclick="KP.i--;kshow()">◀</button><span class="cnt"></span><button onclick="KP.i++;kshow()">▶</button><button onclick="kpres(false)">✕</button></div></div>
 <div class="donate"><div class="in"><div><h3>☕ Ủng hộ người làm báo cáo</h3><p>Báo cáo được xây dựng và cập nhật hằng tháng để hỗ trợ các PGD KV 10.5 theo dõi KPI.<br>Nếu thấy hữu ích, anh chị có thể ủng hộ một ly cà phê qua mã QR bên cạnh.</p>
 <div class="acc"><span>Ngân hàng</span><b>VPBank</b><span>Chủ tài khoản</span><b>TRAN BAO HUY</b><span>Số tài khoản</span><b>226410864</b></div></div>
@@ -1016,16 +1018,17 @@ function kshow(){const ov=document.getElementById('kov'),sl=document.querySelect
 function kpres(on){KP.on=on;const ov=document.getElementById('kov');ov.style.display=on?'block':'none';if(on){try{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}catch(e){}kshow()}else{try{document.fullscreenElement&&document.exitFullscreen()}catch(e){}}}
 document.addEventListener('keydown',e=>{if(!KP.on)return;if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){KP.i++;kshow();e.preventDefault()}else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){KP.i--;kshow();e.preventDefault()}else if(e.key==='Escape')kpres(false)});
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&KP.on)kpres(false)});
-function setView(v){document.body.classList.toggle('kh',v==='kh');document.querySelectorAll('#view button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+function setView(v){document.body.classList.toggle('kh',v==='kh');document.body.classList.toggle('dl',v==='dl');if(v==='dl'){const f=document.getElementById('dlf');if(!f.src)f.src='daily.html?embed=1'}document.querySelectorAll('#view button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
  try{localStorage.setItem('kv105_view',v)}catch(e){}if(v==='kh'){if(!KH_BUILT)khkd();else kfit();scrollTo(0,0)}}
 
-function unlock(){document.getElementById('gate').remove();render();document.querySelectorAll('#view button').forEach(b=>b.onclick=()=>setView(b.dataset.v));let v='db';try{v=localStorage.getItem('kv105_view')||'db'}catch(e){}if(v==='kh')setView('kh')}
+function unlock(){try{sessionStorage.setItem('kv105_ok',PH)}catch(e){}document.getElementById('gate').remove();render();document.querySelectorAll('#view button').forEach(b=>b.onclick=()=>setView(b.dataset.v));let v='db';try{v=localStorage.getItem('kv105_view')||'db'}catch(e){}if(location.hash==='#daily')v='dl';if(v==='kh'||v==='dl')setView(v)}
 (function(){let ok=false;try{ok=localStorage.getItem('kv105_ok')===PH}catch(e){}
  if(ok){unlock();return}
  document.getElementById('gp').focus();
  document.getElementById('gf').onsubmit=async e=>{e.preventDefault();const h=await sha(document.getElementById('gp').value.trim());
   if(h===PH){try{if(document.getElementById('gr').checked)localStorage.setItem('kv105_ok',PH)}catch(e){}unlock()}
   else{document.getElementById('ge').textContent='Sai mật khẩu, vui lòng thử lại.';document.getElementById('gp').select()}}})();
+window.addEventListener('message',e=>{if(e.data&&e.data.kvh){const f=document.getElementById('dlf');if(f)f.style.height=e.data.kvh+'px'}});
 </script>
 </body>
 </html>
