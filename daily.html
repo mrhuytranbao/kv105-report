@@ -96,8 +96,8 @@ body.emb header{display:none}body.emb main{padding-top:12px}
  <section id="s2b"><div class="sh"><h2>2b. KHM (số khách hàng)</h2><span class="d">MT = MT KHM của KV (file Tracking) · KPI HO để tham chiếu</span><button data-s="s2b">📸 Tải ảnh</button></div>
   <div class="card"><div class="cap"></div><table id="t2b"></table></div></section>
 
- <section id="s3"><div class="sh"><h2>3. Giải ngân theo nguồn</h2><span class="d">Topup = My F88 + Tại quầy · KHQL = Vay lại</span><button data-s="s3">📸 Tải ảnh</button></div>
-  <div class="card"><div class="cap"></div><table id="t3"></table><div style="height:14px"></div><table id="t3b"></table></div></section>
+ <section id="s3"><div class="sh"><h2>3. Giải ngân theo nguồn</h2><span class="d">KHQL = Vay lại + Topup · Topup = My F88 + Tại quầy · vs T-1 = Dự báo so với TH cả tháng T-1</span><button data-s="s3">📸 Tải ảnh</button></div>
+  <div class="card"><div class="cap"></div><table id="t3"></table><div style="height:14px"></div><table id="t3b"></table><div style="height:14px"></div><table id="t3c"></table></div></section>
 
  <section id="s4"><div class="sh"><h2>4. RFW – Rút tách đáo – Trễ hạn</h2><span class="d">Rút tách đáo TH = GNN − Net − RFW</span><button data-s="s4">📸 Tải ảnh</button></div>
   <div class="card"><div class="cap"></div><table id="t4"></table><div class="note">%HT RFW = 2 − TH/MT (thấp hơn MT là tốt) · %RFW & %Rút dự báo theo thiết lập của QLKV trong file Tracking.</div></div></section>
@@ -181,7 +181,7 @@ function calc(day){
   const S=(k2,t1,th)=>({mt:MT[k2][i],t1,th,db:th*k});
   o.src={khm:S('khm',d.khm.t1[i],d.khm.th[i]),khm2:S('khm2',D.t1x.khm2[i],d.khm.th2[i]),khm4:S('khm4',D.t1x.khm4[i],d.khm.th4[i]),
    vl2:S('vl2',d.vl.t1_2[i],d.vl.th2[i]),vl4:S('vl4',d.vl.t1_4[i],d.vl.th4[i]),tu2:S('tu2',d.tu.t1_2[i],d.tu.th2[i]),tu4:S('tu4',d.tu.t1_4[i],d.tu.th4[i])};
-  {const q=['vl2','vl4','tu2','tu4'].map(x=>o.src[x]);o.src.khql={mt:sum(q.map(x=>x.mt)),t1:sum(q.map(x=>x.t1)),th:sum(q.map(x=>x.th)),db:sum(q.map(x=>x.db))}}
+  {const q=['vl2','vl4','tu2','tu4'].map(x=>o.src[x]);o.src.khql={mt:sum(q.map(x=>x.mt)),t1:sum(q.map(x=>x.t1)),th:sum(q.map(x=>x.th)),db:sum(q.map(x=>x.db))};const u=[o.src.tu2,o.src.tu4];o.src.tu={mt:sum(u.map(x=>x.mt)),t1:sum(u.map(x=>x.t1)),th:sum(u.map(x=>x.th)),db:sum(u.map(x=>x.db))}}
   R.push(o)}
  const T={sh:'TỔNG KV',name:'TỔNG KV',dk:sum(dk)};
  const sm=(g,f)=>sum(R.map(r=>r[g][f]));
@@ -237,10 +237,11 @@ function render(){
   rowsHTML(R,T,r=>{const q=r.ksl,h=div(q.th,q.mt),db=div(q.db,q.mt),need=q.th==null?null:Math.max(0,(q.mt-q.th)/Math.max(1,ND-dn));return `<td class="pn ${r._c||''}">${r.name}</td><td>${fmt(q.t1)}</td><td>${fmt(q.ho)}</td><td><b>${fmt(q.mt)}</b></td><td><b>${fmt(q.th)}</b></td>${dl(r,x=>x.ksl.th)}<td>${fmt(q.th2)}</td><td>${fmt(q.th4)}</td><td class="${cl(h/tp)}">${pct(h,0)}</td><td>${fmt(q.db)}</td><td class="${bg(db)}">${pct(db,0)}</td><td>${gp(q.mt,q.th)}</td>`},r=>div(r.ksl.th,r.ksl.mt))+'</tbody>';
  /* T3 nguồn */
  const SRC=[['khm','KHM tổng'],['khm2','KHM 2W'],['khm4','KHM 4W'],['vl2','KHQL 2W'],['vl4','KHQL 4W'],['tu2','Topup 2W'],['tu4','Topup 4W']];
- const t3=(id,SRC,kk)=>{document.getElementById(id).innerHTML=`<thead><tr><th rowspan="2" class="pg">PGD</th>${SRC.map((s,j)=>`<th colspan="${j?4:5}">${s[1]}</th>`).join('')}</tr><tr>${SRC.map((x,j)=>'<th class="sub">T-1</th><th class="sub">MT</th><th class="sub">TH</th>'+(j?'':'<th class="sub">Dự báo</th>')+'<th class="sub">%DB</th>').join('')}</tr></thead><tbody>`+
-  rowsHTML(R,T,r=>`<td class="pn ${r._c||''}">${r.name}</td>`+SRC.map(([k],j)=>{const s=r.src[k],db=div(s.db,s.mt);return `<td class="gp">${fmt(s.t1)}</td><td>${fmt(s.mt)}</td><td><b>${fmt(s.th)}</b></td>${j?'':`<td>${fmt(s.db)}</td>`}<td class="${s.mt?bg(db):''}">${s.mt?pct(db,0):(s.th?'Vô hạn':'–')}</td>`}).join(''),r=>div(r.src[kk].th,r.src[kk].mt))+'</tbody>'};
+ const t3=(id,SRC,kk)=>{document.getElementById(id).innerHTML=`<thead><tr><th rowspan="2" class="pg">PGD</th>${SRC.map((s,j)=>`<th colspan="${j?5:6}">${s[1]}</th>`).join('')}</tr><tr>${SRC.map((x,j)=>'<th class="sub">T-1</th><th class="sub">MT</th><th class="sub">TH</th>'+(j?'':'<th class="sub">Dự báo</th>')+'<th class="sub">%DB</th><th class="sub">vs T-1</th>').join('')}</tr></thead><tbody>`+
+  rowsHTML(R,T,r=>`<td class="pn ${r._c||''}">${r.name}</td>`+SRC.map(([k],j)=>{const s=r.src[k],db=div(s.db,s.mt);return `<td class="gp">${fmt(s.t1)}</td><td>${fmt(s.mt)}</td><td><b>${fmt(s.th)}</b></td>${j?'':`<td>${fmt(s.db)}</td>`}<td class="${s.mt?bg(db):''}">${s.mt?pct(db,0):(s.th?'Vô hạn':'–')}</td>${(()=>{const v=s.t1?div(s.db-s.t1,s.t1):null;return v==null?`<td class="vt">${s.th?'Vô hạn':'–'}</td>`:`<td class="vt ${v>=0?'g':'r'}">${v>0?'+':''}${pct(v,0)}</td>`})()}`}).join(''),r=>div(r.src[kk].th,r.src[kk].mt))+'</tbody>'};
  t3('t3',[['khm','GN KHM tổng'],['khm2','KHM 2W'],['khm4','KHM 4W']],'khm');
- t3('t3b',[['khql','GNN KHQL tổng'],['vl2','Vay lại 2W'],['vl4','Vay lại 4W'],['tu2','Topup 2W'],['tu4','Topup 4W']],'khql');
+ t3('t3b',[['khql','GNN KHQL tổng (Vay lại + Topup)'],['vl2','Vay lại 2W'],['vl4','Vay lại 4W']],'khql');
+ t3('t3c',[['tu','GNN Topup tổng'],['tu2','Topup 2W'],['tu4','Topup 4W']],'tu');
  /* T4 RFW – Rút – TLT */
  document.getElementById('t4').innerHTML=`<thead><tr><th rowspan="2" class="pg">PGD</th><th colspan="9">%RFW</th><th colspan="6">Rút tách đáo</th><th colspan="4">Tỷ lệ trễ hạn</th></tr>
   <tr><th class="sub">T-1</th><th class="sub">MT</th><th class="sub">TH</th>${DH}<th class="sub">%HT</th><th class="sub">Cùng kỳ T-1</th><th class="sub">vs cùng kỳ</th><th class="sub">TH (tr)</th><th class="sub">Dự báo</th>
