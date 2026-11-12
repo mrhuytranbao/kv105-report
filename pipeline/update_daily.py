@@ -4,6 +4,8 @@ Dùng:
   python3 update_daily.py add day.json    # thêm/ghi đè 1 ngày (theo 'date'), ghi lại daily.html
   python3 update_daily.py base base.json  # sang tháng mới: thay mon/ndays/dk/mt/t1x..., xoá các ngày cũ
   python3 update_daily.py check day.json  # đối chiếu tổng PGD với tổng KV trong file ngày
+  python3 update_daily.py comb "T1:p1" "T2:p2"   # gộp % vs T-1 (cùng kỳ) của nhiều kênh, vd Topup My F88 + Tại quầy
+     p = % BI dạng số (41.3), 'inf' (Infinity/Vô hạn) ; kênh trống mà BI ghi -100 -> "0:-100" 
 Chạy trong thư mục gốc repo (cạnh daily.html)."""
 import json, sys, re
 F = 'daily.html'
@@ -14,7 +16,20 @@ def load():
 def save(s, a, b, d):
     s = s[:a] + json.dumps(d, ensure_ascii=False, separators=(',', ':')) + s[b:]
     open(F, 'w', encoding='utf-8').write(s)
+def comb(parts):
+    T = ck = 0; unk = False
+    for x in parts:
+        t, pv = x.split(':'); t = float(t or 0)
+        if pv == 'inf': T += t; continue
+        pv = float(pv) / 100
+        if pv <= -1: unk = unk or True; continue
+        T += t; ck += t / (1 + pv)
+    if unk and T > 0: return None  # có kênh mất trắng nhưng không biết cùng kỳ -> không tính được
+    if ck == 0: return 'inf' if T > 0 else (-1.0 if unk else None)
+    return round(T / ck - 1, 4)
 cmd = sys.argv[1]
+if cmd == 'comb':
+    print(json.dumps(comb(sys.argv[2:]))); sys.exit()
 s, a, b, d = load()
 if cmd == 'show':
     base = {k: v for k, v in d.items() if k != 'days'}
