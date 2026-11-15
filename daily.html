@@ -304,7 +304,7 @@ function charts(){
   options:base(title)})};
  mk('c1','Tăng Net lũy kế vs MT '+fmt(T.net.mt),ser(t=>t.net.th),inc(t=>t.net.th),T.net.mt,'Net');
  mk('c2','Giải ngân Net lũy kế vs MT '+fmt(T.gnn.mt),ser(t=>t.gnn.th),inc(t=>t.gnn.th),T.gnn.mt,'GNN');
- mk('c3','GN KHM lũy kế vs MT '+fmt(T.src.khm.mt),ser(t=>t.src.khm.th),inc(t=>t.src.khm.th),T.src.khm.mt,'GN KHM');
+ mk('c3','KHM (số KH) lũy kế vs MT '+fmt(T.ksl.mt),ser(t=>t.ksl.th),inc(t=>t.ksl.th),T.ksl.mt,'KHM (KH)');
  if(CH.c4)CH.c4.destroy();
  const pl=(al)=>({display:c=>c.dataIndex===LI?true:'auto',align:al,offset:6,clamp:true,backgroundColor:'rgba(255,255,255,.85)',borderRadius:3,padding:{top:1,bottom:1,left:3,right:3},font:{weight:'700',size:11},formatter:v=>v==null?'':pct(v,1)});
  CH.c4=new Chart(document.getElementById('c4'),{type:'line',data:{labels:X,datasets:[
